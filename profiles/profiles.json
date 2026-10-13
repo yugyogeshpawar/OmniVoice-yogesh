@@ -1,0 +1,46 @@
+[
+  {
+    "id": "voice_d49488b2",
+    "name": "Pooja  (Hindi)",
+    "language": "hi",
+    "transcript": "नमस्ते, आज हम आधुनिक आवाज़ क्लोनिंग तकनीक का परीक्षण कर रहे हैं। यह आवाज़ साफ़ और स्पष्ट है।",
+    "audio_url": "/api/profile_audio/voice_d49488b2.wav",
+    "prompt_file": "profiles/voice_d49488b2.pt",
+    "duration": 8.36,
+    "rms": 0.054,
+    "created_at": "2026-10-13 13:55:45"
+  },
+  {
+    "id": "voice_d8c1eacf",
+    "name": "My Voice (Hindi)",
+    "language": "hi",
+    "transcript": "नमस्ते, आज हम आधुनिक आवाज़ क्लोनिंग तकनीक का परीक्षण कर रहे हैं। यह आवाज़ साफ़ और स्पष्ट है।",
+    "audio_url": "/api/profile_audio/voice_d8c1eacf.wav",
+    "prompt_file": "profiles/voice_d8c1eacf.pt",
+    "duration": 9.9,
+    "rms": 0.046,
+    "created_at": "2026-10-13 13:48:50"
+  },
+  {
+    "id": "seed_british_female",
+    "name": "Emma (British Female Cloned)",
+    "language": "en",
+    "transcript": "Hello, welcome to OmniVoice! Zero-shot speech synthesis can now produce remarkably natural voices.",
+    "audio_url": "/api/audio/english_female_british.wav",
+    "prompt_file": "profiles/seed_british_female.pt",
+    "duration": 5.34,
+    "rms": 0.067,
+    "created_at": "2026-10-13 13:47:36"
+  },
+  {
+    "id": "seed_hindi_female",
+    "name": "Aditi (Hindi Female Cloned)",
+    "language": "hi",
+    "transcript": "नमस्ते! ओम्नीवॉयस मॉडल में आपका स्वागत है। यह हिंदी में बहुत ही स्पष्ट और प्राकृतिक आवाज़ उत्पन्न कर सकता है।",
+    "audio_url": "/api/audio/hindi_female_natural.wav",
+    "prompt_file": "profiles/seed_hindi_female.pt",
+    "duration": 7.72,
+    "rms": 0.067,
+    "created_at": "2026-10-13 13:47:36"
+  }
+]

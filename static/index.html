@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniVoice Studio - Voice Cloning & TTS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 0.3; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .recording-pulse { animation: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    .tab-active { border-color: #6366f1; color: #ffffff; background-color: rgba(99, 102, 241, 0.15); }
+    .tab-inactive { border-color: transparent; color: #94a3b8; }
+    .tab-inactive:hover { color: #e2e8f0; background-color: rgba(255, 255, 255, 0.03); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800/80 bg-slate-900/70 backdrop-blur sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+          </svg>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight flex items-center gap-2">
+            OmniVoice Studio
+            <span class="text-[11px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-semibold">Apple Silicon MPS</span>
+          </h1>
+          <p class="text-xs text-slate-400">Professional Voice Cloning & Multilingual Speech Synthesis</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center gap-1.5 p-1 bg-slate-950/80 rounded-xl border border-slate-800">
+        <button id="tabCloningBtn" onclick="switchTab('cloning')"
+          class="tab-active px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition">
+          <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+          Voice Cloning Studio
+        </button>
+        <button id="tabTtsBtn" onclick="switchTab('tts')"
+          class="tab-inactive px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition">
+          <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          Preset Voices (TTS)
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6">
+
+    <!-- ========================================================================= -->
+    <!-- TAB 1: VOICE CLONING STUDIO -->
+    <!-- ========================================================================= -->
+    <div id="tabCloning" class="space-y-6">
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left: Step-by-Step Voice Enrollment (7 cols) -->
+        <div class="lg:col-span-7 space-y-6">
+
+          <!-- Enrollment Box -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+              <div>
+                <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                  <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">1</span>
+                  Record or Upload Your Voice
+                </h2>
+                <p class="text-xs text-slate-400">Read a suggested calibration script for 4–8 seconds.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="setEnrollMode('record')" id="btnEnrollRecord" class="px-2.5 py-1 text-xs rounded-lg bg-indigo-600 text-white font-medium">Record Mic</button>
+                <button onclick="setEnrollMode('upload')" id="btnEnrollUpload" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 hover:text-white font-medium">Upload Audio</button>
+              </div>
+            </div>
+
+            <!-- Guided Calibration Script Selector -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-semibold text-slate-300">Choose Calibration Script to Read:</label>
+                <select id="calibSelect" onchange="onCalibrationChange()" class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-indigo-300">
+                  <option value="en_1">English - Balanced Phonetics</option>
+                  <option value="en_2">English - Professional Speech</option>
+                  <option value="en_3">English - Conversational</option>
+                  <option value="hi_1">Hindi - सरल व स्पष्ट (Clear & Natural)</option>
+                  <option value="hi_2">Hindi - पेशेवर वक्तव्य (Professional)</option>
+                  <option value="hi_3">Hindi - सामान्य बातचीत</option>
+                </select>
+              </div>
+
+              <!-- Prominent Script Display Card -->
+              <div class="bg-slate-950/90 border border-indigo-500/30 rounded-xl p-4 relative group">
+                <p id="calibScriptText" class="text-sm md:text-base font-medium text-indigo-100 leading-relaxed font-sans">
+                  "The quick brown fox jumps over the lazy dog. Voice cloning technology enables natural communication across languages."
+                </p>
+                <div class="mt-2 text-[11px] text-slate-400 flex items-center gap-2">
+                  <span class="text-indigo-400 font-semibold">Tip:</span> Read this passage aloud with your normal speaking pace and volume.
+                </div>
+              </div>
+            </div>
+
+            <!-- RECORDING INTERFACE -->
+            <div id="recordInterface" class="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div id="recIndicator" class="w-3.5 h-3.5 rounded-full bg-slate-600"></div>
+                  <span id="recTimer" class="font-mono text-sm font-bold text-slate-300">00:00</span>
+                </div>
+                <span class="text-[11px] text-slate-400">Target duration: 4 to 8 seconds</span>
+              </div>
+
+              <!-- Audio Visualizer Canvas -->
+              <canvas id="visualizerCanvas" width="450" height="48" class="w-full h-12 bg-slate-950 rounded-lg border border-slate-800/80"></canvas>
+
+              <!-- Recording Action Controls -->
+              <div class="flex items-center gap-3">
+                <button id="startRecBtn" onclick="startRecording()"
+                  class="flex-1 bg-red-600 hover:bg-red-500 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg shadow-red-600/30 flex items-center justify-center gap-2 transition active:scale-95 text-xs">
+                  <span class="w-2.5 h-2.5 rounded-full bg-white animate-ping"></span>
+                  Start Recording
+                </button>
+                <button id="stopRecBtn" onclick="stopRecording()" disabled
+                  class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 px-4 rounded-xl border border-slate-700 flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-40 text-xs">
+                  <span class="w-2.5 h-2.5 bg-slate-400 rounded-sm"></span>
+                  Stop Recording
+                </button>
+              </div>
+
+              <!-- Recorded Audio Preview -->
+              <div id="recPreviewContainer" class="hidden pt-2 border-t border-slate-800/80 space-y-2">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-emerald-400 font-medium flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    Recording Captured Successfully
+                  </span>
+                  <span id="recDurationText" class="font-mono text-slate-400">0.0s</span>
+                </div>
+                <audio id="recordedAudioPlayer" controls class="w-full h-9 bg-slate-900 rounded-lg"></audio>
+              </div>
+            </div>
+
+            <!-- UPLOAD INTERFACE (Alternative) -->
+            <div id="uploadInterface" class="hidden bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-3">
+              <label class="block text-xs font-semibold text-slate-300">Upload Clean Voice Audio (WAV / MP3):</label>
+              <input type="file" id="fileUploadInput" accept="audio/*" onchange="handleFileUpload(event)"
+                class="block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer">
+              <audio id="uploadedAudioPlayer" controls class="w-full h-9 bg-slate-900 rounded-lg hidden"></audio>
+            </div>
+
+            <!-- STEP 2: PROFILE DETAILS & VERIFICATION -->
+            <div class="pt-4 border-t border-slate-800 space-y-4">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">2</span>
+                <h3 class="text-sm font-bold text-slate-200">Verify Transcript & Profile Name</h3>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="md:col-span-2">
+                  <label class="block text-xs font-medium text-slate-400 mb-1">Voice Profile Name</label>
+                  <input type="text" id="profileNameInput" value="My Voice Profile" placeholder="e.g. Yogesh (English / Hindi)"
+                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1">Audio Language</label>
+                  <select id="profileLangSelect" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                    <option value="en" selected>English</option>
+                    <option value="hi">Hindi (हिंदी)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Exact Words Spoken in Audio (Transcript)</label>
+                <textarea id="enrollTranscriptInput" rows="2"
+                  class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 resize-none"></textarea>
+              </div>
+
+              <!-- Enrollment Button -->
+              <button id="enrollBtn" onclick="enrollVoiceProfile()"
+                class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition active:scale-95 text-xs md:text-sm">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span id="enrollBtnText">Enroll & Clone Voice Profile</span>
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Right: Saved Cloned Voices & Live Generation (5 cols) -->
+        <div class="lg:col-span-5 space-y-6">
+
+          <!-- Cloned Voice Profiles List -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                Your Cloned Voices
+              </h3>
+              <span id="profileCountBadge" class="text-[11px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full font-semibold">0 active</span>
+            </div>
+
+            <div id="profilesContainer" class="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
+              <!-- Dynamically populated -->
+              <p class="text-xs text-slate-500 italic">Loading cloned profiles...</p>
+            </div>
+          </div>
+
+          <!-- Quick Speech Synthesizer with Selected Cloned Voice -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                Speak in Cloned Voice
+              </h3>
+              <span class="text-[11px] font-mono bg-slate-800 px-2 py-0.5 rounded text-slate-300">Enter to speak</span>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between text-xs text-slate-400 mb-1.5">
+                <span>Active Voice: <b id="activeCloneName" class="text-indigo-300">Select a voice above</b></span>
+              </div>
+              <textarea id="cloneTextInput" rows="3"
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs md:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 resize-none"
+                placeholder="Type anything in English or Hindi and press Enter... (e.g. 'Hello, this is my newly cloned voice speaking!')"></textarea>
+            </div>
+
+            <!-- Action button -->
+            <button id="speakCloneBtn" onclick="generateClonedSpeech()"
+              class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition active:scale-95 text-xs">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path></svg>
+              <span id="speakCloneBtnText">Synthesize in My Voice (Enter)</span>
+            </button>
+
+            <!-- Output Audio Card -->
+            <div id="cloneResultCard" class="hidden bg-slate-950 border border-indigo-500/30 rounded-xl p-3.5 space-y-2">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-emerald-400 font-semibold" id="cloneStats">Generated in 1.2s</span>
+                <a id="cloneDownloadLink" href="#" download="cloned_speech.wav" class="text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                  Download WAV
+                </a>
+              </div>
+              <audio id="cloneAudioPlayer" controls class="w-full h-9 bg-slate-900 rounded-lg"></audio>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- TAB 2: INSTANT TEXT-TO-SPEECH (PRESETS) -->
+    <!-- ========================================================================= -->
+    <div id="tabTts" class="hidden space-y-6">
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <div class="lg:col-span-2 space-y-6">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl relative focus-within:border-indigo-500/50 transition space-y-3">
+            <div class="flex items-center justify-between">
+              <label for="ttsTextInput" class="text-sm font-semibold text-slate-200">Sentence to Speak:</label>
+              <span class="text-xs text-slate-400 font-mono bg-slate-800 px-2 py-0.5 rounded">Enter to generate</span>
+            </div>
+
+            <textarea id="ttsTextInput" rows="3"
+              class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 text-sm md:text-base leading-relaxed resize-none"
+              placeholder="Type any sentence in English or Hindi (e.g. नमस्ते, आप कैसे हैं?)..."></textarea>
+
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+              <div class="flex items-center gap-3 text-xs text-slate-400">
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                  <input type="checkbox" id="ttsAutoPlay" checked class="rounded bg-slate-800 border-slate-700 text-indigo-500">
+                  Auto-play audio
+                </label>
+              </div>
+
+              <button id="ttsGenerateBtn" onclick="generateTtsVoice()"
+                class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-5 py-2.5 rounded-xl shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition active:scale-95 text-xs">
+                <span id="ttsBtnText">Generate Voice (Enter)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- TTS Player Card -->
+          <div id="ttsPlayerCard" class="hidden bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-semibold text-slate-100" id="ttsVoiceTitle">Generated Speech</h3>
+              <span class="text-xs text-slate-400" id="ttsStats">0.0s</span>
+            </div>
+            <audio id="ttsAudioPlayer" controls class="w-full h-10 bg-slate-950 rounded-lg"></audio>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+            <h3 class="text-sm font-bold text-slate-100 border-b border-slate-800 pb-2">Preset Voice Selection</h3>
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1.5">Voice Persona</label>
+              <select id="ttsVoicePreset" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                <option value="en_female_british" selected>🇬🇧 British Female (Emma)</option>
+                <option value="en_male_american">🇺🇸 American Male (David - Deep)</option>
+                <option value="en_female_indian">🇮🇳 Indian English Female (Priya)</option>
+                <option value="hi_female_natural">🇮🇳 Hindi Female (Aditi - Natural)</option>
+                <option value="hi_male_deep">🇮🇳 Hindi Male (Rajesh - Deep)</option>
+                <option value="en_whisper">🤫 Whisper Style (Soft)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    // Audio Recording Variables
+    let mediaStream = null;
+    let audioContext = null;
+    let audioInput = null;
+    let recorderNode = null;
+    let recordedPcmData = [];
+    let isRecording = false;
+    let recStartTime = null;
+    let recTimerInterval = null;
+    let recordedBlob = null;
+    let selectedProfileId = null;
+
+    // Load initial data
+    window.addEventListener('DOMContentLoaded', async () => {
+      loadCalibrationScripts();
+      loadProfiles();
+
+      // Enter key listeners
+      document.getElementById('cloneTextInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          generateClonedSpeech();
+        }
+      });
+
+      document.getElementById('ttsTextInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          generateTtsVoice();
+        }
+      });
+    });
+
+    function switchTab(tab) {
+      const tabCloning = document.getElementById('tabCloning');
+      const tabTts = document.getElementById('tabTts');
+      const btnCloning = document.getElementById('tabCloningBtn');
+      const btnTts = document.getElementById('tabTtsBtn');
+
+      if (tab === 'cloning') {
+        tabCloning.classList.remove('hidden');
+        tabTts.classList.add('hidden');
+        btnCloning.className = "tab-active px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition";
+        btnTts.className = "tab-inactive px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition";
+      } else {
+        tabCloning.classList.add('hidden');
+        tabTts.classList.remove('hidden');
+        btnCloning.className = "tab-inactive px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition";
+        btnTts.className = "tab-active px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition";
+      }
+    }
+
+    function setEnrollMode(mode) {
+      const rec = document.getElementById('recordInterface');
+      const up = document.getElementById('uploadInterface');
+      const btnRec = document.getElementById('btnEnrollRecord');
+      const btnUp = document.getElementById('btnEnrollUpload');
+
+      if (mode === 'record') {
+        rec.classList.remove('hidden');
+        up.classList.add('hidden');
+        btnRec.className = "px-2.5 py-1 text-xs rounded-lg bg-indigo-600 text-white font-medium";
+        btnUp.className = "px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 hover:text-white font-medium";
+      } else {
+        rec.classList.add('hidden');
+        up.classList.remove('hidden');
+        btnRec.className = "px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 hover:text-white font-medium";
+        btnUp.className = "px-2.5 py-1 text-xs rounded-lg bg-indigo-600 text-white font-medium";
+      }
+    }
+
+    async function loadCalibrationScripts() {
+      try {
+        const res = await fetch('/api/calibration_scripts');
+        const scripts = await res.json();
+        window.calibrationScripts = scripts;
+        onCalibrationChange();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function onCalibrationChange() {
+      const id = document.getElementById('calibSelect').value;
+      const script = (window.calibrationScripts || []).find(s => s.id === id);
+      if (script) {
+        document.getElementById('calibScriptText').innerText = `"${script.text}"`;
+        document.getElementById('enrollTranscriptInput').value = script.text;
+        document.getElementById('profileLangSelect').value = script.lang;
+        document.getElementById('profileNameInput').value = `My Voice (${script.lang === 'hi' ? 'Hindi' : 'English'})`;
+      }
+    }
+
+    // ==========================================
+    // AUDIO RECORDING USING WEB AUDIO API (WAV)
+    // ==========================================
+    async function startRecording() {
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, sampleRate: 24000 } });
+        audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+        audioInput = audioContext.createMediaStreamSource(mediaStream);
+
+        recordedPcmData = [];
+        const bufferSize = 4096;
+        recorderNode = audioContext.createScriptProcessor(bufferSize, 1, 1);
+
+        // Visualizer Setup
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 64;
+        audioInput.connect(analyser);
+        const canvas = document.getElementById('visualizerCanvas');
+        const canvasCtx = canvas.getContext('2d');
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+        function draw() {
+          if (!isRecording) return;
+          requestAnimationFrame(draw);
+          analyser.getByteFrequencyData(dataArray);
+          canvasCtx.fillStyle = '#020617';
+          canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+          const barWidth = (canvas.width / dataArray.length) * 2;
+          let x = 0;
+          for (let i = 0; i < dataArray.length; i++) {
+            const barHeight = (dataArray[i] / 255) * canvas.height;
+            canvasCtx.fillStyle = '#6366f1';
+            canvasCtx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
+            x += barWidth;
+          }
+        }
+
+        recorderNode.onaudioprocess = (e) => {
+          if (!isRecording) return;
+          const input = e.inputBuffer.getChannelData(0);
+          recordedPcmData.push(new Float32Array(input));
+        };
+
+        audioInput.connect(recorderNode);
+        recorderNode.connect(audioContext.destination);
+
+        isRecording = true;
+        recStartTime = Date.now();
+        document.getElementById('recIndicator').className = "w-3.5 h-3.5 rounded-full bg-red-500 recording-pulse";
+        document.getElementById('startRecBtn').disabled = true;
+        document.getElementById('stopRecBtn').disabled = false;
+
+        recTimerInterval = setInterval(() => {
+          const sec = Math.floor((Date.now() - recStartTime) / 1000);
+          const m = String(Math.floor(sec / 60)).padStart(2, '0');
+          const s = String(sec % 60).padStart(2, '0');
+          document.getElementById('recTimer').innerText = `${m}:${s}`;
+        }, 200);
+
+        draw();
+
+      } catch (err) {
+        alert("Microphone access error: " + err.message);
+      }
+    }
+
+    function stopRecording() {
+      if (!isRecording) return;
+      isRecording = false;
+      clearInterval(recTimerInterval);
+
+      document.getElementById('recIndicator').className = "w-3.5 h-3.5 rounded-full bg-slate-600";
+      document.getElementById('startRecBtn').disabled = false;
+      document.getElementById('stopRecBtn').disabled = true;
+
+      // Stop stream tracks
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+      }
+      if (recorderNode) recorderNode.disconnect();
+      if (audioInput) audioInput.disconnect();
+
+      // Encode PCM Float32 to WAV Blob
+      const sampleRate = audioContext.sampleRate;
+      recordedBlob = encodeWAV(recordedPcmData, sampleRate);
+      const audioUrl = URL.createObjectURL(recordedBlob);
+
+      const previewPlayer = document.getElementById('recordedAudioPlayer');
+      previewPlayer.src = audioUrl;
+      document.getElementById('recPreviewContainer').classList.remove('hidden');
+
+      const durSec = ((Date.now() - recStartTime) / 1000).toFixed(1);
+      document.getElementById('recDurationText').innerText = `${durSec}s recorded`;
+    }
+
+    function encodeWAV(samplesList, sampleRate) {
+      let totalLength = 0;
+      for (const s of samplesList) totalLength += s.length;
+      const merged = new Float32Array(totalLength);
+      let offset = 0;
+      for (const s of samplesList) {
+        merged.set(s, offset);
+        offset += s.length;
+      }
+
+      // Convert to 16-bit PCM WAV
+      const buffer = new ArrayBuffer(44 + merged.length * 2);
+      const view = new DataView(buffer);
+
+      function writeString(view, offset, string) {
+        for (let i = 0; i < string.length; i++) {
+          view.setUint8(offset + i, string.charCodeAt(i));
+        }
+      }
+
+      writeString(view, 0, 'RIFF');
+      view.setUint32(4, 36 + merged.length * 2, true);
+      writeString(view, 8, 'WAVE');
+      writeString(view, 12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true); // PCM
+      view.setUint16(22, 1, true); // Mono
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeString(view, 36, 'data');
+      view.setUint32(40, merged.length * 2, true);
+
+      // Write PCM samples
+      let index = 44;
+      for (let i = 0; i < merged.length; i++) {
+        const s = Math.max(-1, Math.min(1, merged[i]));
+        view.setInt16(index, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+        index += 2;
+      }
+
+      return new Blob([view], { type: 'audio/wav' });
+    }
+
+    function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (file) {
+        recordedBlob = file;
+        const url = URL.createObjectURL(file);
+        const player = document.getElementById('uploadedAudioPlayer');
+        player.src = url;
+        player.classList.remove('hidden');
+      }
+    }
+
+    // ==========================================
+    // ENROLL VOICE PROFILE
+    // ==========================================
+    async function enrollVoiceProfile() {
+      if (!recordedBlob) {
+        alert("Please record or upload a voice sample first!");
+        return;
+      }
+
+      const name = document.getElementById('profileNameInput').value.trim();
+      const lang = document.getElementById('profileLangSelect').value;
+      const transcript = document.getElementById('enrollTranscriptInput').value.trim();
+
+      if (!transcript) {
+        alert("Please enter the exact words spoken in the audio!");
+        return;
+      }
+
+      const btn = document.getElementById('enrollBtn');
+      const btnText = document.getElementById('enrollBtnText');
+      btn.disabled = true;
+      btnText.innerText = "Analyzing & Enrolling Voice...";
+
+      const formData = new FormData();
+      formData.append("file", recordedBlob, "voice_sample.wav");
+      formData.append("name", name);
+      formData.append("language", lang);
+      formData.append("transcript", transcript);
+
+      try {
+        const res = await fetch('/api/enroll_voice', { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.detail || "Enrollment failed");
+        }
+
+        alert(`✓ Voice Profile '${data.profile.name}' enrolled in ${data.enroll_time}s!`);
+        await loadProfiles();
+        selectProfile(data.profile.id);
+
+      } catch (err) {
+        alert("Enrollment Error: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btnText.innerText = "Enroll & Clone Voice Profile";
+      }
+    }
+
+    // ==========================================
+    // PROFILES MANAGEMENT
+    // ==========================================
+    async function loadProfiles() {
+      try {
+        const res = await fetch('/api/profiles');
+        const profiles = await res.json();
+        const container = document.getElementById('profilesContainer');
+        const badge = document.getElementById('profileCountBadge');
+
+        badge.innerText = `${profiles.length} active`;
+
+        if (profiles.length === 0) {
+          container.innerHTML = '<p class="text-xs text-slate-500 italic">No cloned voices yet. Enroll your voice above!</p>';
+          return;
+        }
+
+        container.innerHTML = '';
+        profiles.forEach((p, idx) => {
+          const isSelected = selectedProfileId === p.id || (!selectedProfileId && idx === 0);
+          if (isSelected && !selectedProfileId) selectedProfileId = p.id;
+
+          const div = document.createElement('div');
+          div.className = `p-3 rounded-xl border transition cursor-pointer flex items-center justify-between ${isSelected ? 'bg-indigo-950/40 border-indigo-500 text-white shadow-md' : 'bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700'}`;
+          div.onclick = () => selectProfile(p.id);
+
+          div.innerHTML = `
+            <div class="truncate max-w-[200px]">
+              <div class="flex items-center gap-1.5">
+                <span class="font-semibold text-xs text-slate-100 truncate">${p.name}</span>
+                <span class="text-[10px] bg-slate-800 px-1.5 py-0.2 rounded font-mono text-slate-400">${p.language.toUpperCase()}</span>
+              </div>
+              <p class="text-[11px] text-slate-400 truncate italic">"${p.transcript}"</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="event.stopPropagation(); playSample('${p.audio_url}')" class="p-1 rounded bg-slate-800 hover:bg-slate-700 text-indigo-400">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path></svg>
+              </button>
+              <button onclick="event.stopPropagation(); deleteProfile('${p.id}')" class="p-1 rounded bg-slate-800 hover:bg-red-950 text-slate-400 hover:text-red-400">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              </button>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+
+        updateActiveProfileDisplay();
+
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function selectProfile(id) {
+      selectedProfileId = id;
+      loadProfiles();
+    }
+
+    function updateActiveProfileDisplay() {
+      fetch('/api/profiles').then(r => r.json()).then(profiles => {
+        const found = profiles.find(p => p.id === selectedProfileId);
+        if (found) {
+          document.getElementById('activeCloneName').innerText = `${found.name} (${found.language.toUpperCase()})`;
+        }
+      });
+    }
+
+    async function deleteProfile(id) {
+      if (!confirm("Are you sure you want to delete this voice profile?")) return;
+      await fetch(`/api/profiles/${id}`, { method: 'DELETE' });
+      if (selectedProfileId === id) selectedProfileId = null;
+      loadProfiles();
+    }
+
+    function playSample(url) {
+      const a = new Audio(url);
+      a.play();
+    }
+
+    // ==========================================
+    // SYNTHESIZE USING CLONED VOICE
+    // ==========================================
+    async function generateClonedSpeech() {
+      const text = document.getElementById('cloneTextInput').value.trim();
+      if (!text) {
+        alert("Please enter a sentence to speak!");
+        return;
+      }
+      if (!selectedProfileId) {
+        alert("Please select or enroll a voice profile first!");
+        return;
+      }
+
+      const btn = document.getElementById('speakCloneBtn');
+      const btnText = document.getElementById('speakCloneBtnText');
+      btn.disabled = true;
+      btnText.innerText = "Speaking in your voice...";
+
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: text,
+            profile_id: selectedProfileId,
+            num_step: 16
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Generation error");
+
+        const card = document.getElementById('cloneResultCard');
+        const player = document.getElementById('cloneAudioPlayer');
+        card.classList.remove('hidden');
+        player.src = data.audio_base64;
+        player.play().catch(e => console.log(e));
+
+        document.getElementById('cloneStats').innerText = `Generated in ${data.gen_time}s (RTF: ${data.rtf})`;
+        document.getElementById('cloneDownloadLink').href = data.audio_url;
+
+      } catch (err) {
+        alert("Error: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btnText.innerText = "Synthesize in My Voice (Enter)";
+      }
+    }
+
+    // ==========================================
+    // TAB 2: TTS PRESET GENERATION
+    // ==========================================
+    async function generateTtsVoice() {
+      const text = document.getElementById('ttsTextInput').value.trim();
+      if (!text) {
+        alert("Please enter a sentence to speak!");
+        return;
+      }
+
+      const presetId = document.getElementById('ttsVoicePreset').value;
+      const autoPlay = document.getElementById('ttsAutoPlay').checked;
+      const btn = document.getElementById('ttsGenerateBtn');
+      const btnText = document.getElementById('ttsBtnText');
+
+      btn.disabled = true;
+      btnText.innerText = "Generating...";
+
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: text,
+            preset_id: presetId,
+            num_step: 16
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Generation error");
+
+        const card = document.getElementById('ttsPlayerCard');
+        const player = document.getElementById('ttsAudioPlayer');
+        card.classList.remove('hidden');
+        player.src = data.audio_base64;
+        if (autoPlay) player.play().catch(e => console.log(e));
+
+        document.getElementById('ttsStats').innerText = `${data.gen_time}s (${data.duration}s audio)`;
+
+      } catch (err) {
+        alert("Error: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btnText.innerText = "Generate Voice (Enter)";
+      }
+    }
+  </script>
+</body>
+</html>

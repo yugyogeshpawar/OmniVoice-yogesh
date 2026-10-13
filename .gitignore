@@ -1,0 +1,76 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Heavy Model Weights & Checkpoints (Never commit multi-GB weights)
+checkpoints/
+*.safetensors
+*.pt
+*.bin
+*.pth
+*.onnx
+
+# User-generated Audio & Dynamic Data
+generated_samples/
+uploads/
+profiles/*.wav
+profiles/*.pt
+test*.wav
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.m4a
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+
+# Vercel & Deployment
+.vercel/
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+
+# IDE & Editor Configs
+.vscode/
+.idea/
+*.swp
+*.swo
